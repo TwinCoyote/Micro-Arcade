@@ -1,45 +1,26 @@
-#include <Arduino.h>
 #include "app.h"
-#include "input.h"
-#include "states_displays.h"
 
-#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+bool selectPressed = false;
+unsigned long initStart = 0;
+bool initStarted = false;
 
-#define ANCHO_PANTALLA 128
-#define ALTO_PANTALLA 64
-#define DIRECCION_OLED 0x3C
+int menu_count = 0;
 
-// ============================
-// Variables internas del módulo
-// ============================
+Adafruit_SSD1306 display(ANCHO_PANTALLA, ALTO_PANTALLA, &Wire, -1);
 
-static int menu_count = 0;
-static unsigned long interval = 200;
+unsigned long interval = 200;
 
-static Adafruit_SSD1306 display(ANCHO_PANTALLA, ALTO_PANTALLA, &Wire, -1);
-static Input input(2, 19, 4, 16);
+int max_state = (int)LAST_STATE;
 
-enum State
+state current_state = INIT;
+
+Input input(2, 19, 4, 16, 5);
+
+bool canMove(unsigned long interval)
 {
-    INIT,
-    MAIN_MENU,
-    SETTINGS_MENU,
-    GAME_PONG,
-    GAME_SNAKE,
-    LAST_STATE
-};
 
-static State current_state = INIT;
-
-// ============================
-// Funciones internas privadas
-// ============================
-
-static bool canMove(unsigned long interval)
-{
     static unsigned long previousTime = 0;
+
     unsigned long currentTime = millis();
 
     if (currentTime - previousTime >= interval)
@@ -47,14 +28,11 @@ static bool canMove(unsigned long interval)
         previousTime = currentTime;
         return true;
     }
+
     return false;
 }
 
-// ============================
-// Funciones públicas del módulo
-// ============================
-
-void appInit()
+void setup()
 {
 
     Serial.begin(115200);
@@ -72,51 +50,47 @@ void appInit()
     display.display();
 }
 
-void appUpdate()
+void loop()
 {
 
     int dir = input.realDirection();
-
-    if (dir == 4 && canMove(200))
-    {
-        menu_count--;
-    }
-
-    if (dir == 3 && canMove(200))
+    Serial.println(menu_count);
+    if (dir == 3)
     {
         menu_count++;
+        delay(200);
     }
-
-    if (menu_count > LAST_STATE - 1)
+    if (dir == 4)
     {
-        menu_count = 1;
+        menu_count--;
+        delay(200);
     }
-
-    if (menu_count < 1)
-    {
-        menu_count = LAST_STATE - 1;
-    }
-
-    current_state = (State)menu_count;
-
+    // TODO - Crear antirebote en los botones para eliminar el delay
+    current_state = (state)menu_count;
     switch (current_state)
     {
-
     case INIT:
-        display.clearDisplay();
-        init_screen(display);
-        display.display();
-
-        if (canMove(600) && end_init_screen())
+        if (initStarted == false)
+        {
+            display.clearDisplay();
+            init_screen(display);
+            display.display();
+            canMove(3000);
+            initStarted = true;
+            current_state = MAIN_MENU;
+        }
+        else
         {
             current_state = MAIN_MENU;
         }
+
         break;
 
     case MAIN_MENU:
         display.clearDisplay();
         main_menu_display(display);
         display.display();
+        canMove(200);
         break;
 
     case SETTINGS_MENU:
@@ -136,8 +110,10 @@ void appUpdate()
         snake_display(display);
         display.display();
         break;
-
-    default:
-        break;
     }
+
+    if (menu_count >= max_state)
+        menu_count = 1;
+    if (menu_count <= 0 && initStarted == false)
+        menu_count = max_state - 1;
 }
