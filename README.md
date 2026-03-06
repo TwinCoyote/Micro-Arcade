@@ -30,6 +30,32 @@ test/
 - **platformio.ini**: configuration for building with PlatformIO targeting an ESP32.
 - **CMakeLists.txt**: present due to PlatformIO, but PlatformIO handles build steps.
 
+## Hardware Setup
+
+### Circuit Diagram
+
+![Circuit Schematic](assets/img/circuito_principal.png)
+
+The project is designed to work with:
+- **ESP32 Development Board**
+- **128x64 I2C OLED Display** (address: 0x3C)
+- **6 Push Buttons** for user input
+
+### Button Pin Configuration
+
+The input buttons are mapped to the following ESP32 GPIO pins (defined in `input.cpp`):
+
+| Button   | GPIO Pin |
+|----------|----------|
+| Up       | 2        |
+| Down     | 19       |
+| Right    | 4        |
+| Left     | 16       |
+| Select   | 5        |
+| Back     | 23       |
+
+All buttons use **INPUT_PULLUP** mode and are active low (triggered when pulled to ground).
+
 ## Features
 
 - OLED display initialization and drawing routines (using Adafruit SSD1306/GFX).
@@ -54,6 +80,15 @@ The firmware will compile and flash to the connected board.
 - The `main.cpp` file is intentionally removed as the Arduino entry points are defined in `app.cpp`.
 - Paths in game headers use relative includes to locate core headers.
 - To add new games, create new files under `src/games/` and update the menu logic in `app.cpp`.
+
+## Testing & Simulation
+
+This project is tested and validated on both:
+
+- **Physical Hardware**: Real ESP32 board connected to actual OLED display and buttons.
+- **WOKWI Platform**: Online simulation environment (https://wokwi.com) for virtual prototyping and testing without physical components.
+
+The circuit diagram above reflects the hardware configuration used in both environments.
 
 ## License
 
