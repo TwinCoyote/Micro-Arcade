@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "games/Snake.h"
 
 #define ANCHO_PANTALLA 128
 #define ALTO_PANTALLA 64
@@ -15,7 +16,8 @@ bool initStarted = false;
 bool continue_init = false;
 int menu_count = 0;
 
-
+bool snakeStarted = false;
+bool inMenu = true;
 
 Adafruit_SSD1306 display(ANCHO_PANTALLA, ALTO_PANTALLA, &Wire, -1);
 
@@ -33,7 +35,7 @@ int max_state = (int)LAST_STATE;
 
 state current_state = INIT;
 
-Input input(2, 19, 4, 16, 5);
+Input input(2, 19, 4, 16, 5, 23);
 
 bool canMove(unsigned long interval) {
 
@@ -77,26 +79,13 @@ void loop() {
     delay(200);
   }
   // TODO - Crear antirebote en los botones para eliminar el delay
-  current_state = (state)menu_count;
+
+  if (inMenu) {
+    current_state = (state)menu_count;
+  }
+
   switch (current_state) {
-    // case INIT:
-    //   if (initStarted == false) {
-    //     display.clearDisplay();
-    //     init_screen(display);
-    //     display.display();
-    //     initStarted = true;
-    //     delay(3000);
-    //     if (canMove(30000)) {
-    //       current_state = MAIN_MENU;
-    //       menu_count = 1;
-    //     }
 
-    //   }
-    //   else {
-    //     menu_count = 1;
-    //   }
-
-    //   break;
     case INIT:
 
       if (!initStarted) {
@@ -118,7 +107,6 @@ void loop() {
       display.clearDisplay();
       main_menu_display(display);
       display.display();
-      canMove(200);
       break;
 
     case SETTINGS_MENU:
@@ -134,9 +122,30 @@ void loop() {
       break;
 
     case GAME_SNAKE:
-      display.clearDisplay();
-      snake_display(display);
-      display.display();
+    Serial.println(dir);
+
+      inMenu = false;
+
+      if (!snakeStarted) {
+        display.clearDisplay();
+        snake_display(display);   
+        display.display();
+
+        snake_init();
+        if(dir == 5) snakeStarted = true;
+      }
+
+      if (canMove(100) && snakeStarted) {
+        
+        snake_game();
+      }
+
+      if (dir == 6) {   
+        inMenu = true;
+        snakeStarted = false;
+        current_state = MAIN_MENU;
+      }
+
       break;
   }
 

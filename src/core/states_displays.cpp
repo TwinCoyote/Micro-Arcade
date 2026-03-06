@@ -3,7 +3,7 @@
 static bool finished = false;
 static bool already_run = false;
 const unsigned long eventInterval = 5000;
-unsigned long previousTime = 0;
+static unsigned long previousTime = 0; // file-local timer avoids clash with other modules
 unsigned long startTime = 0;
 
 const unsigned char logo_iniciomenu[] PROGMEM = {
